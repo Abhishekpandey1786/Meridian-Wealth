@@ -350,7 +350,7 @@ export default function LeadForm({
         />
       </label>
 
-      <label className="mt-5 flex items-start gap-2 text-xs">
+      <label className="mt-5 flex items-start gap-2 bg-slate-500 p-3 text-xs">
         <input
           required
           type="checkbox"
