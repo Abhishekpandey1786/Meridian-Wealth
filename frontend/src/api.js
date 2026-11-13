@@ -1,6 +1,6 @@
 
 const BASE = (
-  import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  import.meta.env.VITE_API_URL || 'https://meridian-wealth-41ps.onrender.com/api'
 ).replace(/\/+$/, '');
 
 async function request(path, options = {}) {
