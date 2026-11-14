@@ -34,7 +34,7 @@ app.use(helmet());
 
 // CORS configuration
 const allowedOrigins = (
-  process.env.FRONTEND_URL || 'http://localhost:5173'
+  process.env.FRONTEND_URL || 'https://meridianwelth.netlify.app/'
 )
   .split(',')
   .map((origin) => origin.trim().replace(/\/+$/, ''))
