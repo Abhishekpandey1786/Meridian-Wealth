@@ -16,7 +16,14 @@ const HEADERS = [
   'Previous Investment Details',
   'Message',
   'Consent',
-  'UTM / Source'
+  'UTM / Source',
+  'Crypto Platforms',
+  'Brokerage Platforms',
+  'Bank Platforms',
+  'Retirement Platforms',
+  'Treasury Platforms',
+  'Real Estate Platforms',
+  'Insurance Platforms'
 ];
 
 function getClient() {
@@ -51,6 +58,7 @@ function sheetRange(tab, cell) {
   return `'${escapedTab}'!${cell}`;
 }
 
+// Prevent spreadsheet formula injection
 function safe(value) {
   if (value === null || value === undefined) {
     return '';
@@ -60,32 +68,82 @@ function safe(value) {
     return value;
   }
 
-  if (/^\s*[=+\-@]/.test(value)) {
+  if (/^[\s]*[=+\-@]/.test(value)) {
     return `'${value}`;
   }
 
   return value;
 }
 
+function arrayToString(value) {
+  if (!Array.isArray(value)) return '';
+
+  return value.join(', ');
+}
+
+// Preserve existing columns and add missing new headers
 async function ensureHeaders(sheets, id, tab) {
-  const range = sheetRange(tab, 'A1:O1');
+  const range = sheetRange(tab, 'A1:V1');
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: id,
     range
   });
 
-  if (!response.data.values ||
-      response.data.values.length === 0) {
+  const existing = response.data.values?.[0] || [];
+
+  if (existing.length === 0) {
     await sheets.spreadsheets.values.update({
       spreadsheetId: id,
-      range: sheetRange(tab, 'A1'),
+      range: sheetRange(tab, 'A1:V1'),
       valueInputOption: 'RAW',
       requestBody: {
         values: [HEADERS]
       }
     });
+
+    return;
   }
+
+  // Only add missing headers. Do not overwrite old headers.
+  const missing = [];
+
+  HEADERS.forEach((header, index) => {
+    if (!existing[index]) {
+      missing.push({
+        column: index + 1,
+        header
+      });
+    }
+  });
+
+  for (const item of missing) {
+    const column = columnLetter(item.column);
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: id,
+      range: sheetRange(tab, `${column}1`),
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[item.header]]
+      }
+    });
+  }
+}
+
+function columnLetter(number) {
+  let result = '';
+
+  while (number > 0) {
+    const remainder = (number - 1) % 26;
+
+    result =
+      String.fromCharCode(65 + remainder) + result;
+
+    number = Math.floor((number - 1) / 26);
+  }
+
+  return result;
 }
 
 exports.appendLead = async (lead) => {
@@ -104,14 +162,6 @@ exports.appendLead = async (lead) => {
 
   await ensureHeaders(sheets, id, tab);
 
-  const services = Array.isArray(lead.servicesInterested)
-    ? lead.servicesInterested.join(', ')
-    : '';
-
-  const investments = Array.isArray(lead.previousInvestments)
-    ? lead.previousInvestments.join(', ')
-    : '';
-
   const utm = lead.utm || {};
 
   const source = Object.entries(utm)
@@ -120,6 +170,7 @@ exports.appendLead = async (lead) => {
 
   const row = [
     new Date().toISOString(),
+
     lead.firstName,
     lead.lastName,
     lead.email,
@@ -127,18 +178,33 @@ exports.appendLead = async (lead) => {
     lead.city,
     lead.state,
     lead.investableAssets,
-    services,
+
+    arrayToString(lead.servicesInterested),
+
     lead.hasAdvisor,
-    investments,
+
+    arrayToString(lead.previousInvestments),
+
     lead.previousInvestmentsDetails,
     lead.message,
+
     lead.consent ? 'Yes' : 'No',
-    source
+
+    source,
+
+    arrayToString(lead.cryptoPlatforms),
+    arrayToString(lead.brokeragePlatforms),
+    arrayToString(lead.bankPlatforms),
+    arrayToString(lead.retirementPlatforms),
+    arrayToString(lead.treasuryPlatforms),
+    arrayToString(lead.realEstatePlatforms),
+    arrayToString(lead.insurancePlatforms)
+
   ].map(safe);
 
   const response = await sheets.spreadsheets.values.append({
     spreadsheetId: id,
-    range: sheetRange(tab, 'A:O'),
+    range: sheetRange(tab, 'A:V'),
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: {

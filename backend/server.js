@@ -29,32 +29,41 @@ console.log(
   process.env.GOOGLE_PRIVATE_KEY ? 'LOADED' : 'MISSING'
 );
 
-// Security
+// Security headers
 app.use(helmet());
 
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+// CORS configuration
+const allowedOrigins = (
+  process.env.FRONTEND_URL || 'http://localhost:5173'
+)
   .split(',')
-  .map((o) => o.trim().replace(/\/+$/, ''))
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 
 app.use(
   cors({
-    origin: (origin, cb) => {
-      // Postman/curl/health checks mein origin nahi hota
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      return cb(null, false);
-    },
+    origin: (origin, callback) => {
+      // Allow requests without Origin (Postman, curl, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
+    }
   })
 );
 
+// Request body limit
 app.use(express.json({ limit: '50kb' }));
 
-// Rate limiting
+// Rate limiting for lead submissions
 app.use(
   '/api/leads',
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
     message: {
       ok: false,
       error: 'Too many requests. Please try again later.'
@@ -71,11 +80,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Routes
+// API routes
 app.use('/api/leads', require('./routes/leads'));
 app.use('/api', require('./routes/content'));
 
-// 404
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     ok: false,
@@ -83,9 +92,23 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
+// Global error handler
 app.use((err, req, res, next) => {
   console.error('ERROR:', err.message);
+
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      ok: false,
+      error: 'Origin not allowed'
+    });
+  }
+
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      ok: false,
+      error: 'Request body is too large'
+    });
+  }
 
   res.status(500).json({
     ok: false,
