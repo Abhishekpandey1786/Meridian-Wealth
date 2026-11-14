@@ -12,7 +12,6 @@ export default function Navbar() {
           {NAV.map(([l, to]) => (
             <NavLink key={to} to={to} className={({ isActive }) => `hover:text-gold-400 ${isActive ? 'text-gold-400' : ''}`}>{l}</NavLink>
           ))}
-          <a href={`tel:${SITE.phone}`} className="text-gold-400">{SITE.phone}</a>
           <Link to="/contact" className="btn-gold !py-2">Free Consultation</Link>
         </nav>
         <button className="lg:hidden" onClick={() => setOpen(!open)} aria-label="Menu">{open ? '✕' : '☰'}</button>

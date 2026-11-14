@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="md:col-span-2">
           <p className="font-serif text-2xl text-white">Meridian <span className="text-gold-400">Wealth</span></p>
           <p className="mt-3 max-w-md text-sm">Independent financial planning and investment management for individuals, families and business owners.</p>
-          <p className="mt-4 text-sm">{SITE.address}<br />{SITE.phone} · {SITE.email}</p>
+          <p className="mt-4 text-sm">{SITE.address}<br />{SITE.email}</p>
         </div>
         <div>
           <p className="mb-3 font-semibold text-white">Explore</p>
