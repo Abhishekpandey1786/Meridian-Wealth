@@ -5,7 +5,6 @@ import { SITE } from '../config';
 export function FloatingButtons() {
   const [show, setShow] = useState(false);
   useEffect(() => { const f = () => setShow(window.scrollY > 500); window.addEventListener('scroll', f); return () => window.removeEventListener('scroll', f); }, []);
-  const wa = `https://wa.me/${SITE.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hi, I want to know about growing my investment.')}`;
  
 }
 
