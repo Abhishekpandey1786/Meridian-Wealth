@@ -6,13 +6,7 @@ export function FloatingButtons() {
   const [show, setShow] = useState(false);
   useEffect(() => { const f = () => setShow(window.scrollY > 500); window.addEventListener('scroll', f); return () => window.removeEventListener('scroll', f); }, []);
   const wa = `https://wa.me/${SITE.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hi, I want to know about growing my investment.')}`;
-  return (
-    <>
-      <a href={wa} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="fixed bottom-5 left-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-2xl text-white shadow-lg hover:scale-105">💬</a>
-      {show && <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="fixed bottom-5 right-5 z-40 h-12 w-12 rounded-full bg-gold-500 font-bold text-navy-900 shadow-lg">↑</button>}
-      <Link to="/contact" className="fixed inset-x-0 bottom-0 z-30 bg-gold-500 py-3 text-center font-bold text-navy-900 md:hidden">Get Free Consultation →</Link>
-    </>
-  );
+ 
 }
 
 export function CookieBanner() {
